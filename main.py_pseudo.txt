@@ -1,0 +1,120 @@
+from datetime IMPORT datetime
+
+
+
+IMPORT matplotlib.pyplot as plt
+
+IMPORT numpy as np
+
+IMPORT pandas as pd
+
+
+
+
+
+DEFINE CLASS Analisis:
+
+    DEFINE FUNCTION __init__(self, nombrearchivo="db_audit_30DAY.csv"):
+
+        SET self.nombre_archivo TO nombrearchivo
+
+
+
+    DEFINE FUNCTION lectura(self, verbose="false"):
+
+        IF verbose EQUALS "false":
+
+            TRY:
+
+                SET df TO pd.read_csv(self.nombre_archivo)
+
+                RETURN df
+
+            EXCEPT:
+
+                RETURN
+
+        ELSE:
+
+            TRY:
+
+                SET df TO pd.read_csv(self.nombre_archivo)
+
+                OUTPUT("Lectura completa.")
+
+                RETURN df
+
+            EXCEPT:
+
+                OUTPUT("Error en la lectura del archivo: ", self.nombre_archivo)
+
+
+
+    DEFINE FUNCTION contenido(self, archivo):
+
+        RETURN OUTPUT(archivo.nunique(axis=0))
+
+
+
+    DEFINE FUNCTION estadistica_comandos(self, archivo):
+
+        SET tipos_comandos TO []
+
+        FOR el IN archivo["Type"]:
+
+            IF el not IN tipos_comandos:
+
+                tipos_comandos.append(el)
+
+        SET cant_comandos TO np.zeros(len(tipos_comandos), dtype=int)
+
+        FOR el IN archivo["Type"]:
+
+            FOR i IN range(len(tipos_comandos)):
+
+                IF el EQUALS tipos_comandos[i]:
+
+                    cant_comandos[i] += 1
+
+        SET porcentajes TO []
+
+        FOR el IN cant_comandos:
+
+            porcentajes.append(round(el / cant_comandos.sum(), 5))
+
+        FOR i IN range(len(porcentajes)):
+
+            OUTPUT("El comando {} tiene un {}% de presencia en el dataframe.".format(tipos_comandos[i], porcentajes[i]))
+
+
+
+    DEFINE FUNCTION grafica_duracion_comandos(self, archivo):
+
+        SET # archivo['Time'] TO archivo['Time'].map(lambda x: datetime.strptime(str(x), '%Y/%m/%d %H:%M:%S.%f'))
+
+        SET x TO archivo['Time'][:5]
+
+        SET y TO archivo['Duration'][:5]
+
+        plt.plot(x, y)
+
+        plt.gcf().autofmt_xdate()
+
+        plt.show()
+
+
+
+
+
+IF __name__ EQUALS '__main__':
+
+    SET prueba TO Analisis()
+
+    SET frame TO prueba.lectura()
+
+    CALL prueba.contenido(frame) 
+
+    CALL prueba.estadistica_comandos(frame) 
+
+    CALL prueba.grafica_duracion_comandos(frame) 
+
